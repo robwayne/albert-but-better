@@ -28,6 +28,9 @@ const CourseList = props => {
                                 requirements={requirements}
                                 lectureNum={ind+1}
                                 labNum={0}
+                                addCourseHandler={props.addCourseHandler}
+                                added={props.added}
+                                removeCourseHandler={props.removeCourseHandler}
                             />
                         );
                     })

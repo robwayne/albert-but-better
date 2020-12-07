@@ -5,17 +5,33 @@ import userImage from "./user-image.png";
 import searchIcon from "./search.svg";
 import coursesInfo from "./data/courses-info.json";
 import CourseList from "./components/CourseList";
+import Timetable from "./components/Timetable"
 
 function App() {
 
   const [coursesDBListDict, setCoursesDBListDict] = useState({});
   const [userCourses, setUserCourses] = useState([]);
+  const [userCourseIDs, setUserCourseIDs] = useState({});
   const [filteredCourses, setFilteredCourses] = useState([]);
   const [courseSearchText, setCourseSearchText] = useState('');
 
-  const searchCourses = () => {
-    const query = courseSearchText.trim().toLowerCase();
-    if (query) {
+  const dayIndicesMap = {
+    'Sun': 0,
+    'Mon': 1, 
+    'Tue': 2, 
+    'Wed': 3, 
+    'Thu': 4, 
+  }
+
+  const parseTiming = timing => {
+    const [days, startHour,,,endHour,] = timing.trim().split(' ');
+    const [day1, day2] = days.trim().split(',');
+    console.log(day1, day2, parseInt(startHour),parseFloat(endHour));
+  }
+
+  const searchCourses = (queryString) => {
+    const query = queryString.trim().toLowerCase();
+    if (query.length >= 1) {
       let queriedCourses = [];
       if (coursesDBListDict[query]) {
         const courseInfo = coursesDBListDict[query];
@@ -26,7 +42,7 @@ function App() {
         }
       } else if (!coursesDBListDict[query]) {
         queriedCourses = Object.keys(coursesDBListDict).map(courseID => {
-          if (coursesDBListDict[courseID].title.toLowerCase().includes(query)) {
+          if (coursesDBListDict[courseID].title.toLowerCase().includes(query) || coursesDBListDict[courseID].courseID.toLowerCase().includes(query)) {
             return  coursesDBListDict[courseID];
           }
         }).filter(course => !!course);
@@ -40,10 +56,13 @@ function App() {
         queriedCourses = courseArr;
       }
       setFilteredCourses(queriedCourses);
+    } else {
+      setFilteredCourses([]);
     }
   }
 
   useEffect(() => {
+      parseTiming('Mon,Wed 9.00 AM - 11.40 AM');
       let courseDBDict = {};
       coursesInfo.forEach(course => {
           const { Title, Description, CourseID, Instructor, Prerequisites, Corequisites, Timing, Status} = course;
@@ -66,12 +85,32 @@ function App() {
               courseDBDict[courseIdLower].timings.push(Timing);
           }
       });
-      const courses = [courseDBDict['cs-uh 1050']];
-      courses[0].timing = courses[0].timings[0];
-      courses[0].timings = undefined;
-      setUserCourses(courses);
       setCoursesDBListDict(courseDBDict);
   }, [])
+
+  const addCourse = (courseID, lectureNumber) => {
+    const lowerCaseCourseID = courseID.toLowerCase();
+    if (lowerCaseCourseID && coursesDBListDict[lowerCaseCourseID]) {
+      if (!userCourseIDs[lowerCaseCourseID]) {
+        const { timings } = coursesDBListDict[lowerCaseCourseID];
+        setUserCourses([...userCourses, {...coursesDBListDict[lowerCaseCourseID], timings: undefined, timing: timings[lectureNumber]}]);
+        setUserCourseIDs({...userCourseIDs, ...{[lowerCaseCourseID]: courseID}})
+      } else {
+        alert('It seems this course is already added to your list of courses')
+      }
+    }
+  }
+
+  const removeCourse = (courseID) => {
+    const lowerCaseCourseID = courseID.toLowerCase();
+    if (lowerCaseCourseID && coursesDBListDict[lowerCaseCourseID]) {
+      if (userCourseIDs[lowerCaseCourseID]) {
+        const { timings } = coursesDBListDict[lowerCaseCourseID];
+        setUserCourses(userCourses.filter(course => course.courseID !== courseID));
+        setUserCourseIDs({...userCourseIDs, ...{[lowerCaseCourseID]: undefined}})
+      }
+    }
+  }
 
   return (
     <div className="main-container">
@@ -82,7 +121,6 @@ function App() {
         </div>
         <div className="header-title-section">
           <p className="header-title">NYU Albert Revamped</p>
-          {/* <p className="header-title-desc">()</p> */}
         </div>
         <a className="logout-button" href="#">LOGOUT</a>
       </div>
@@ -90,114 +128,23 @@ function App() {
         <div className="content-section main-content-section">
             <div className="content-section-left">
               <p className="courses-list-title">MY COURSES</p>
-              <CourseList courses={userCourses}/>
+              <CourseList courses={userCourses} addCourseHandler={addCourse} added={true} removeCourseHandler={removeCourse}/>
             </div>
             <div className="content-section-right">
-              <div className="timetable">
-                <div className="timetable-hour-mark">
-                  <div className="hour-title">TIME</div>
-                  <div className="hour">8:00 AM</div>
-                  <div className="hour">9:00 AM</div>
-                  <div className="hour">10:00 AM</div>
-                  <div className="hour">11:00 AM</div>
-                  <div className="hour">12:00 PM</div>
-                  <div className="hour">1:00 PM</div>
-                  <div className="hour">2:00 PM</div>
-                  <div className="hour">3:00 PM</div>
-                  <div className="hour">4:00 PM</div>
-                  <div className="hour">5:00 PM</div>
-                  <div className="hour">6:00 PM</div>
-                  <div className="hour">7:00 PM</div>
-                </div>
-                <div className="timetable-day">
-                  <p className="day-name">Sunday</p>
-                  <div className="hour-block"></div>
-                  <div className="hour-block"></div>
-                  <div className="hour-block"></div>
-                  <div className="hour-block"></div>
-                  <div className="hour-block"></div>
-                  <div className="hour-block"></div>
-                  <div className="hour-block"></div>
-                  <div className="hour-block"></div>
-                  <div className="hour-block"></div>
-                  <div className="hour-block"></div>
-                  <div className="hour-block"></div>
-                  <div className="hour-block"></div>
-                </div>
-                <div className="timetable-day">
-                  <p className="day-name">Monday</p>
-                  <div className="hour-block"></div>
-                  <div className="hour-block"></div>
-                  <div className="hour-block"></div>
-                  <div className="hour-block"></div>
-                  <div className="hour-block"></div>
-                  <div className="hour-block"></div>
-                  <div className="hour-block"></div>
-                  <div className="hour-block"></div>
-                  <div className="hour-block"></div>
-                  <div className="hour-block"></div>
-                  <div className="hour-block"></div>
-                  <div className="hour-block"></div>
-                </div>
-                <div className="timetable-day">
-                  <p className="day-name">Tuesday</p>
-                  <div className="hour-block"></div>
-                  <div className="hour-block"></div>
-                  <div className="hour-block"></div>
-                  <div className="hour-block"></div>
-                  <div className="hour-block"></div>
-                  <div className="hour-block"></div>
-                  <div className="hour-block"></div>
-                  <div className="hour-block"></div>
-                  <div className="hour-block"></div>
-                  <div className="hour-block"></div>
-                  <div className="hour-block"></div>
-                  <div className="hour-block"></div>
-                </div>
-                <div className="timetable-day">
-                  <p className="day-name">Wednesday</p>
-                  <div className="hour-block"></div>
-                  <div className="hour-block"></div>
-                  <div className="hour-block"></div>
-                  <div className="hour-block"></div>
-                  <div className="hour-block"></div>
-                  <div className="hour-block"></div>
-                  <div className="hour-block"></div>
-                  <div className="hour-block"></div>
-                  <div className="hour-block"></div>
-                  <div className="hour-block"></div>
-                  <div className="hour-block"></div>
-                  <div className="hour-block"></div>
-                </div>
-                <div className="timetable-day">
-                  <p className="day-name">Thursday</p>
-                  <div className="hour-block"></div>
-                  <div className="hour-block"></div>
-                  <div className="hour-block"></div>
-                  <div className="hour-block"></div>
-                  <div className="hour-block"></div>
-                  <div className="hour-block"></div>
-                  <div className="hour-block"></div>
-                  <div className="hour-block"></div>
-                  <div className="hour-block"></div>
-                  <div className="hour-block"></div>
-                  <div className="hour-block"></div>
-                  <div className="hour-block"></div>
-                </div>
-              </div>
+              <Timetable />
             </div>
         </div>
         <div className="content-section">
-          <p className="section-title-text">Shopping List</p>
+          <p className="section-title-text">COURSE SEARCH</p>
           <div className="content-section-action">
-            <input className="course-search-input" type="text" value={courseSearchText} onChange={event => setCourseSearchText(event.target.value)} placeholder="Enter course name or course ID: (example CS-UH 1001)..." />
+            <input className="course-search-input" type="text" value={courseSearchText} onChange={({target: {value}}) => { searchCourses(value); setCourseSearchText(value); }} placeholder="Enter course name or course ID: (example CS-UH 1001)..." />
             <a className="course-search-submit">
               <img src={searchIcon} className="search-icon" onClick={searchCourses}/>
             </a>
           </div>
           <div className="content-section-body">
             {
-              filteredCourses.length > 0 ? (<CourseList courses={filteredCourses} />) : null
+              filteredCourses.length > 0 ? (<CourseList courses={filteredCourses} addCourseHandler={addCourse} />) : null
             }
           </div>
         </div>

@@ -28,6 +28,7 @@ const Course = props => {
     const [lectureNum, setLectureNum] = useState(1);
     const [labNum, setLabNum] = useState(0);
     const [component, setComponent] = useState('');
+    const [isAdded, setIsAdded] = useState(false);
     const [requirements, setRequirements] = useState([]);
 
     const [showModal, setShowModal] = useState(false);
@@ -50,11 +51,15 @@ const Course = props => {
         setLectureNum(props.lectureNum);
         setLabNum(props.labNum);
         setComponent(props.component);
+        setIsAdded(props.added);
     }, [props])
 
     return (
         <div className="course-main-container">
             <div className="course-header">
+                <div className="header-button" onClick={() => { isAdded ? props.removeCourseHandler(courseID) : props.addCourseHandler(courseID, lectureNum-1) }}>
+                    <p>{isAdded ? "x" : "+"}</p>
+                </div>
                 <p className="course-title">{title}</p>
                 <p className="course-header-important">{courseID}</p>
                 <p className="course-header-important">{instructor}</p>
