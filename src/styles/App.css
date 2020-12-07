@@ -120,13 +120,14 @@ a {
   flex-direction: column;
   flex: 1;
   align-items: center;
+  overflow-y: auto;
 }
 
 .content-section-right {
   display: flex;
   flex-direction: column;
   flex: 2;
-  border-left: 1px solid #440079;
+  border-left: 1px solid #000;
   justify-content: center;
   /* align-items: center; */
   padding: 10px 20px;
@@ -155,7 +156,6 @@ a {
   font-size: 10px;
   padding-left: 10px;
   font-size: 13px;
-  color: #440079;
 }
 
 .content-section-body {

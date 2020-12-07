@@ -116,7 +116,7 @@ function App() {
               <CourseList courses={userCourses} addCourseHandler={addCourse} added={true} removeCourseHandler={removeCourse}/>
             </div>
             <div className="content-section-right">
-              <Timetable />
+              <Timetable userCourses={userCourses} />
             </div>
         </div>
         <div className="content-section">

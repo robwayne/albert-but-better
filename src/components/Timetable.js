@@ -1,7 +1,8 @@
+import { useEffect, useState } from "react";
 
 import '../styles/timetable.css';
 
-const Timetable = props => {
+const Timetable = ({userCourses}) => {
 
     const dayIndicesMap = {
         'Sun': 0,
@@ -12,37 +13,73 @@ const Timetable = props => {
     }
 
     const weekDays = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday'];
-    const dayHours = [
+    const startOfWorkDay = 9; // day starts at 
+    const classHours = [
         '9:00 AM', 
-        '10:25 AM', 
-        '11:50 AM', 
-        '1:15 PM', 
-        '2:40 PM',
-        '4:05 PM',
-        '5:30 PM',
-        '6:55 PM',
-        '8:20 PM',
+        '10:00 AM', 
+        '11:00 AM', 
+        '1:00 PM', 
+        '2:00 PM',
+        '3:00 PM',
+        '4:00 PM',
+        '5:00 PM',
+        '6:00 PM',
     ];
 
     const parseTiming = timing => {
         const [days, startHour,,,endHour,] = timing.trim().split(' ');
         const [day1, day2] = days.trim().split(',');
-        console.log(day1, day2, parseInt(startHour),parseFloat(endHour));
+        const dayIndex = dayIndicesMap[day1.trim()];
+        const hr = parseInt(startHour.trim()) < startOfWorkDay ? parseInt(startHour.trim()) + 12 : parseInt(startHour.trim());
+        const startHourIndex = hr - startOfWorkDay; 
+        let times = {[dayIndex]: startHourIndex};
+        if (day2) {
+            times[dayIndicesMap[day2.trim()]] = startHourIndex;
+        }
+
+        return times;
     }
+
+    const [coursesToRender, setCoursesToRender] = useState([]);
+    
+    useEffect(() => {
+        console.log(userCourses)
+        let userCourseTimings = userCourses.map(({timing, courseID}) => {
+            const times = parseTiming(timing);
+            return {times, courseID};
+        })
+        setCoursesToRender(userCourseTimings);
+    }, [userCourses]);
 
     return (
         <div className="timetable">
             <div className="timetable-hour-mark">
                 <div className="hour-title">TIME</div>
-                { dayHours.map((hour, index) => <div key={index*13} className="hour">{hour}</div>) }
+                { classHours.map((hour, index) => <div key={index*17} className="hour">{hour}</div>) }
             </div>
             {
-                weekDays.map((day, index) => (
-                    <div key={index} className="timetable-day">
-                        <p className="day-name">{day}</p>
-                        { dayHours.map((hour, index) => <div key={index*13} className="hour-block" />) }
-                    </div>
-                ))
+                weekDays.map((day, dayIndex) => {
+                    const takenCourses = coursesToRender.filter(c => c.times[dayIndex] !== undefined);
+   
+                    return (
+                        <div key={dayIndex} className="timetable-day">
+                            <p className="day-name">{day}</p>
+                            { 
+                                classHours.map((_, hourIndex) => {
+                                    const takenCourse = takenCourses.find(c => c.times[dayIndex] === hourIndex);
+                                    if (takenCourse) {
+                                        return (
+                                            <div key={hourIndex*13} className="taken" >
+                                                {takenCourse.courseID}
+                                            </div>
+                                        )
+                                    }
+                                    return <div key={hourIndex*13} className="hour-block" />
+                                }) 
+                            }
+                        </div>
+                    )
+                })
             }
         </div>
     );   
