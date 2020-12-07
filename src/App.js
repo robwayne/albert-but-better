@@ -15,20 +15,6 @@ function App() {
   const [filteredCourses, setFilteredCourses] = useState([]);
   const [courseSearchText, setCourseSearchText] = useState('');
 
-  const dayIndicesMap = {
-    'Sun': 0,
-    'Mon': 1, 
-    'Tue': 2, 
-    'Wed': 3, 
-    'Thu': 4, 
-  }
-
-  const parseTiming = timing => {
-    const [days, startHour,,,endHour,] = timing.trim().split(' ');
-    const [day1, day2] = days.trim().split(',');
-    console.log(day1, day2, parseInt(startHour),parseFloat(endHour));
-  }
-
   const searchCourses = (queryString) => {
     const query = queryString.trim().toLowerCase();
     if (query.length >= 1) {
@@ -62,7 +48,6 @@ function App() {
   }
 
   useEffect(() => {
-      parseTiming('Mon,Wed 9.00 AM - 11.40 AM');
       let courseDBDict = {};
       coursesInfo.forEach(course => {
           const { Title, Description, CourseID, Instructor, Prerequisites, Corequisites, Timing, Status} = course;
