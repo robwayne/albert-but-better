@@ -1,9 +1,78 @@
+import { useEffect, useState } from 'react';
+
 import './styles/App.css';
 import userImage from "./user-image.png";
 import searchIcon from "./search.svg";
-import Course from "./components/Course";
+import coursesInfo from "./data/courses-info.json";
+import CourseList from "./components/CourseList";
 
 function App() {
+
+  const [coursesDBListDict, setCoursesDBListDict] = useState({});
+  const [userCourses, setUserCourses] = useState([]);
+  const [filteredCourses, setFilteredCourses] = useState([]);
+  const [courseSearchText, setCourseSearchText] = useState('');
+
+  const searchCourses = () => {
+    const query = courseSearchText.trim().toLowerCase();
+    if (query) {
+      let queriedCourses = [];
+      if (coursesDBListDict[query]) {
+        const courseInfo = coursesDBListDict[query];
+        const { timings } = courseInfo;
+
+        for (let i=0;i<timings.length;i++) {
+          queriedCourses.push({...courseInfo, timings: undefined, timing: timings[i]});
+        }
+      } else if (!coursesDBListDict[query]) {
+        queriedCourses = Object.keys(coursesDBListDict).map(courseID => {
+          if (coursesDBListDict[courseID].title.toLowerCase().includes(query)) {
+            return  coursesDBListDict[courseID];
+          }
+        }).filter(course => !!course);
+        let courseArr = [];
+        queriedCourses.forEach(course => {
+          const { timings } = course;
+          for (let i=0;i<timings.length;i++) {
+            courseArr.push({...course, timings: undefined, timing: timings[i]});
+          }
+        })
+        queriedCourses = courseArr;
+      }
+      setFilteredCourses(queriedCourses);
+    }
+  }
+
+  useEffect(() => {
+      let courseDBDict = {};
+      coursesInfo.forEach(course => {
+          const { Title, Description, CourseID, Instructor, Prerequisites, Corequisites, Timing, Status} = course;
+          const courseIdLower = CourseID.toLowerCase();
+          if (Status === "Cancelled") return;
+          if (!courseDBDict[courseIdLower]) {
+              // split the preqs into their own course IDs
+              const prereqs = Prerequisites.split(';').filter(str => !!str).map(str => str.trim()); 
+              const coreqs = Corequisites.split(';').filter(str => !!str).map(str => str.trim());
+              const requirements = prereqs.filter(prereq => !coreqs.find(coreq => coreq === prereq)).concat(coreqs);
+              courseDBDict[courseIdLower] = {
+                  title: Title,
+                  description: Description,
+                  courseID: CourseID,
+                  instructor: Instructor,
+                  requirements,
+                  timings: [Timing]
+              };
+          } else {
+              courseDBDict[courseIdLower].timings.push(Timing);
+          }
+      });
+      const courses = [courseDBDict['cs-uh 1050']];
+      courses[0].timing = courses[0].timings[0];
+      courses[0].timings = undefined;
+      setUserCourses(courses);
+      setCoursesDBListDict(courseDBDict);
+  }, [])
+
   return (
     <div className="main-container">
       <div className="header">
@@ -12,31 +81,16 @@ function App() {
           <p className="user-name">Sarah Fuller</p>
         </div>
         <div className="header-title-section">
-          <p className="header-title">NYU Albert</p>
-          <p className="header-title-desc">(But Better)</p>
+          <p className="header-title">NYU Albert Revamped</p>
+          {/* <p className="header-title-desc">()</p> */}
         </div>
         <a className="logout-button" href="#">LOGOUT</a>
       </div>
       <div className="content-container">
         <div className="content-section main-content-section">
             <div className="content-section-left">
-              <p className="courses-list-title">COURSES</p>
-              <Course 
-                title={"Introduction to Computer Science"} 
-                description={"Computer Science is an innovative and exciting field that focuses on producing efficient solutions for solving problems in any field..."} 
-                timings={['Mon. 10:25 - 11:30', 'Wed. 10:25 - 11:30']}
-                requirements={[]}
-                lectureNum={1}
-                labNum={1}
-              />
-              <Course 
-                title={"Discrete Mathematics"} 
-                description={"Discrete mathematics concerns the study of mathematical structures that are discrete rather than continuousç..."} 
-                timings={['Tue. 9:00 - 10:15', 'Thu. 9:00 - 10:15']}
-                requirements={['Intro to Interactive Media', 'Communications Lab']}
-                lectureNum={1}
-                labNum={0}
-              />
+              <p className="courses-list-title">MY COURSES</p>
+              <CourseList courses={userCourses}/>
             </div>
             <div className="content-section-right">
               <div className="timetable">
@@ -134,16 +188,18 @@ function App() {
             </div>
         </div>
         <div className="content-section">
-          <div className="content-section-title">
-            <p className="section-title-text">Shopping List</p>
-          </div>
+          <p className="section-title-text">Shopping List</p>
           <div className="content-section-action">
-            <input className="course-search-input" type="text" id="course-search-input" name="course-search-input" placeholder="Enter course name, number or ID..." />
-            <a className="course-search-submit" id="course-search-submit" >
-              <img src={searchIcon} className="search-icon" />
+            <input className="course-search-input" type="text" value={courseSearchText} onChange={event => setCourseSearchText(event.target.value)} placeholder="Enter course name or course ID: (example CS-UH 1001)..." />
+            <a className="course-search-submit">
+              <img src={searchIcon} className="search-icon" onClick={searchCourses}/>
             </a>
           </div>
-          <div className="content-section-body"></div>
+          <div className="content-section-body">
+            {
+              filteredCourses.length > 0 ? (<CourseList courses={filteredCourses} />) : null
+            }
+          </div>
         </div>
       </div>
       </div>

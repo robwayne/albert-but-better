@@ -1,35 +1,78 @@
 import "../styles/course.css"
 import { useState, useEffect } from 'react';
+import Modal from "react-modal"
+
+Modal.setAppElement('#root');
+
+const modalStyles = {
+    content : {
+      top: '50%',
+      left: '50%',
+      right: 'auto',
+      bottom: 'auto',
+      marginRight: '-50%',
+      transform: 'translate(-50%, -50%)',
+      margin: 50,
+      backgroundColor: '#440079',
+      color: '#fff'
+    }
+};
 
 const Course = props => {
 
     const [title, setTitle] = useState('TITLE');
+    const [courseID, setCourseID] = useState();
+    const [instructor, setInstructor] = useState();
     const [description, setDescription] = useState('DESCRIPTION');
-    const [timings, setTimings] = useState(['Mon. 10:25 - 11:30', 'Wed. 10:25 - 11:30']);
+    const [timing, setTiming] = useState('TIMING');
     const [lectureNum, setLectureNum] = useState(1);
-    const [labNum, setLabNum] = useState();
+    const [labNum, setLabNum] = useState(0);
+    const [component, setComponent] = useState('');
     const [requirements, setRequirements] = useState([]);
+
+    const [showModal, setShowModal] = useState(false);
+
+    const showDescriptionModal = () => {
+        setShowModal(true);
+    };
+
+    const closeDescriptionModal = () => {
+        setShowModal(false);
+    };
 
     useEffect(() => {
         setTitle(props.title);
+        setCourseID(props.courseID);
+        setInstructor(props.instructor);
         setDescription(props.description);
-        setTimings(props.timings);
+        setTiming(props.timing);
         setRequirements(props.requirements);
         setLectureNum(props.lectureNum);
         setLabNum(props.labNum);
+        setComponent(props.component);
     }, [props])
 
     return (
         <div className="course-main-container">
             <div className="course-header">
                 <p className="course-title">{title}</p>
-                {timings.map(t => <p key={t} className="course-timing">{t}</p>)}
+                <p className="course-header-important">{courseID}</p>
+                <p className="course-header-important">{instructor}</p>
+                <p className="course-timing">{timing}</p>
             </div>
             <div className="course-body">
                 <div className="course-info">
-                    <div className="course-desc">
-                        <p className="course-desc-text">{description}</p>
+                    <div className="course-desc" onClick={showDescriptionModal}>
+                        <p className="course-desc-text">Click to see course description</p>
                     </div>
+                    <Modal
+                        isOpen={showModal}
+                        onRequestClose={closeDescriptionModal}
+                        contentLabel={"Course Description"}
+                        style={modalStyles}
+                    >
+                        <p>{description}</p>
+                    </Modal>
                     <div className="course-detail-container">
                         <div className="lecture-detail">
                             Lecture {lectureNum}
@@ -49,8 +92,8 @@ const Course = props => {
                         <>
                             <div className="separator" />
                             <span style={{fontWeight: "bold", marginTop: 5}} >Requirements</span>
-                            <div style={{marginTop: 5, marginBottom: 10}}>
-                            { requirements.map((req, ind) => <span style={{marginLeft: 10, fontSize: 11}} key={ind}>{ind == requirements.length-1 ? req : req+','} </span> ) }
+                            <div className="requirements-container">
+                                { requirements.map((req, ind) => <p style={{fontSize: 11, margin: 3}} key={ind}>{`${ind+1}) ${req}`} </p> ) }
                             </div>
                         </>
                        )
