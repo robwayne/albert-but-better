@@ -73,11 +73,44 @@ function App() {
       setCoursesDBListDict(courseDBDict);
   }, [])
 
+  const parseTiming = timing => {
+    const [days, startHour,,,endHour,] = timing.trim().split(' ');
+    const [day1, day2] = days.trim().split(',');
+    // const dayIndex = dayIndicesMap[day1.trim()];
+    const startOfWorkDay = 9;
+    const hr = parseInt(startHour.trim()) < startOfWorkDay ? parseInt(startHour.trim()) + 12 : parseInt(startHour.trim());
+    const startHourIndex = hr - startOfWorkDay; 
+    let times = {[day1.trim()]: {start: parseFloat(startHour.trim()), end: parseFloat(endHour.trim())}};
+    if (day2) {
+        times[day2.trim()] = {start: parseFloat(startHour.trim()), end: parseFloat(endHour.trim())};
+    }
+
+    return times;
+  }  
+  
+  // userCourses.forEach(uc => {
+  //   const uctiming = parseTiming(uc.timing);
+  //   Object.keys(courseTiming).map(day => {
+  //     console.log("dayday);
+  //     if ((uctiming[day].start >= courseTiming[day].start && uctiming[day].start <= courseTiming[day].end) || 
+  //       (uctiming[day].end >= courseTiming[day].start && uctiming[day].end <= courseTiming[day].end)) {
+  //         alert('This class currently conflicts with', uc.title);
+  //       }
+  //   })
+  // })
+
   const addCourse = (courseID, lectureNumber) => {
     const lowerCaseCourseID = courseID.toLowerCase();
     if (lowerCaseCourseID && coursesDBListDict[lowerCaseCourseID]) {
       if (!userCourseIDs[lowerCaseCourseID]) {
         const { timings } = coursesDBListDict[lowerCaseCourseID];
+        const course = coursesDBListDict[lowerCaseCourseID];
+        userCourses.forEach(uc => {
+          if ((course.title.toLowerCase().includes("data structure") && uc.title.toLowerCase().includes("introduction to computer science")) ||
+            (uc.title.toLowerCase().includes("data structure") && course.title.toLowerCase().includes("introduction to computer science"))) {
+              alert("shshs")
+            }
+        })
         setUserCourses([...userCourses, {...coursesDBListDict[lowerCaseCourseID], timings: undefined, timing: timings[lectureNumber]}]);
         setUserCourseIDs({...userCourseIDs, ...{[lowerCaseCourseID]: courseID}})
       } else {

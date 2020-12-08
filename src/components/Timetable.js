@@ -26,15 +26,31 @@ const Timetable = ({userCourses}) => {
         '6:00 PM',
     ];
 
+    const validate = (courseTimings) => {
+        const timingDict = {};
+        let valid = true;
+        courseTimings.forEach(ct => {
+            for (let i=0;i<weekDays;i++) {
+                if (timingDict[i] !== undefined) {
+                    if (timingDict[i] === ct.times[i]) { valid = false; break; }
+                } else {
+                    timingDict[i] = ct.times[i];
+                }
+            }
+            if (!valid) return;
+        })
+        return valid;
+    }
+
     const parseTiming = timing => {
         const [days, startHour,,,endHour,] = timing.trim().split(' ');
         const [day1, day2] = days.trim().split(',');
         const dayIndex = dayIndicesMap[day1.trim()];
         const hr = parseInt(startHour.trim()) < startOfWorkDay ? parseInt(startHour.trim()) + 12 : parseInt(startHour.trim());
         const startHourIndex = hr - startOfWorkDay; 
-        let times = {[dayIndex]: startHourIndex};
+        let times = {[day1]: {start: startHour, end: endHour}};
         if (day2) {
-            times[dayIndicesMap[day2.trim()]] = startHourIndex;
+            times[day2.trim()] = {start: startHour, end: endHour};
         }
 
         return times;
@@ -48,7 +64,15 @@ const Timetable = ({userCourses}) => {
             const times = parseTiming(timing);
             return {times, courseID};
         })
-        setCoursesToRender(userCourseTimings);
+
+        if (userCourseTimings && userCourseTimings.length) { 
+            if (validate(userCourseTimings)) {
+                setCoursesToRender(userCourseTimings);
+            } else {
+                alert('It seems some of the courses you have chosen clash/overlap. Check them again before enrolling!')
+            }
+            // alert('It seems some of the courses you have chosen clash/overlap. Check them again before enrolling!')
+        }
     }, [userCourses]);
 
     return (
